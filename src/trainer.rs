@@ -1,6 +1,6 @@
 use std::str::FromStr;
 
-use bevy::prelude::*;
+use bevy::{prelude::*, window::WindowResized};
 use rand::seq::SliceRandom;
 use strum::IntoEnumIterator;
 use strum_macros::{AsRefStr, EnumIter, EnumString};
@@ -55,6 +55,9 @@ struct TrainSequence {
 struct NoteSpriteInfo {
     index: usize,
 }
+
+#[derive(Component)]
+struct ResolutionText;
 
 fn index_to_x(index: usize, note_space: f32) -> f32 {
     (STAFF_X + STAFF_NOTE_X) as f32 + note_space * index as f32
@@ -387,6 +390,7 @@ fn game_button_setup(mut commands: Commands, asset_server: Res<AssetServer>) {
                                 width: Val::Px(150.0),
                                 height: Val::Px(65.0),
                                 border: UiRect::all(Val::Px(1.0)),
+                                flex_direction: FlexDirection::Column,
                                 // horizontally center child text
                                 justify_content: JustifyContent::Center,
                                 // vertically center child text
@@ -406,6 +410,20 @@ fn game_button_setup(mut commands: Commands, asset_server: Res<AssetServer>) {
                                     color: Color::rgb(0.9, 0.9, 0.9),
                                 },
                             ));
+                            if let TrainCourse::All = var {
+                                // Resolution label
+                                parent.spawn((
+                                    TextBundle::from_section(
+                                        "Resolution",
+                                        TextStyle {
+                                            font_size: 10.0,
+                                            color: Color::rgb(0.5, 0.5, 0.9),
+                                            ..default()
+                                        },
+                                    ),
+                                    ResolutionText,
+                                ));
+                            }
                         });
                 }
             });
@@ -455,6 +473,19 @@ fn game_button_setup(mut commands: Commands, asset_server: Res<AssetServer>) {
         });
 }
 
+/// This system shows how to respond to a window being resized.
+/// Whenever the window is resized, the text will update with the new resolution.
+fn on_resize_system(
+    mut q: Query<&mut Text, With<ResolutionText>>,
+    mut resize_reader: EventReader<WindowResized>,
+) {
+    let mut text = q.single_mut();
+    for e in resize_reader.iter() {
+        // When resolution is being changed
+        text.sections[0].value = format!("{:.1} x {:.1}", e.width, e.height);
+    }
+}
+
 // fn draw_example_collection(mut _gizmos: Gizmos) {
 //     let start = Vec2::Y * 0.;
 //     gizmos.line_2d(start, start + Vec2::X * 1000.0, Color::BLUE);
@@ -487,6 +518,7 @@ impl Plugin for TrainerPlugin {
                 Update,
                 (staff_update_sprites, staff_update, staff_update_labels),
             )
+            .add_systems(Update, on_resize_system)
             .add_systems(Update, game_button_system);
     }
 }
