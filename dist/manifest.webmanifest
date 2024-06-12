@@ -1,0 +1,38 @@
+{
+  "background_color": "#ffffff",
+  "dir": "ltr",
+  "display": "standalone",
+  "name": "Staff Trainer",
+  "orientation": "landscape",
+  "scope": "/",
+  "short_name": "Staff Trainer",
+  "start_url": "/staff_trainer",
+  "theme_color": "#ffffff",
+  "icons": [
+    {
+      "src": "/assets/icons/android-launchericon-512-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/assets/icons/android-launchericon-192-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/assets/icons/android-launchericon-144-144.png",
+      "sizes": "144x144",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/assets/icons/android-launchericon-96-96.png",
+      "sizes": "96x96",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ],
+  "id": "fun.woncomp.staff-trainer"
+}
