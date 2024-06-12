@@ -5,11 +5,32 @@ edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
+[lib]
+name = "staff_trainer"
+path = "src/lib.rs"
+crate-type = [
+    "cdylib",    # needed for Android
+    "rlib",      # rlib needed for running locally
+]
+
+[[bin]]
+name = "staff_trainer"
+path = "src/main.rs"
+
 [dependencies]
-bevy = { version = "0.11.2" }
+anyhow = "1.0.86"
+bevy = "0.14.0-rc.2" # This is a workaround for the slice::from_raw_parts crash it requires android-activity v0.6.0 See: https://github.com/rust-mobile/android-activity/issues/153
+jni = "0.21.1"
+log = "0.4.21"
 rand = "0.8.5"
 strum = "0.26"
 strum_macros = "0.26"
+
+[target.'cfg(target_os = "android")'.dependencies]
+android_logger = "0.13.3"
+
+[patch.crates-io]
+bevy = { path = "./bevy" }
 
 [features]
 dynamic_linking = ["bevy/dynamic_linking"]
@@ -24,3 +45,35 @@ opt-level = 1
 # Enable high optimizations for dependencies (incl. Bevy), but not for our code:
 [profile.dev.package."*"]
 opt-level = 3
+
+[package.metadata.android]
+package = "fun.woncomp.staff_trainer"
+apk_name = "staff_trainer"
+strip = "strip"
+# see https://github.com/rust-mobile/cargo-apk
+assets = "assets"
+build_targets = ["aarch64-linux-android"]
+
+[package.metadata.android.sdk]
+target_sdk_version = 30
+
+[package.metadata.android.application]
+label = "Staff Trainer"
+debuggable = true
+# icon = "@icons/android-launchericon"
+
+[package.metadata.android.application.activity]
+label = "Staff Trainer"
+launch_mode = "singleTop"
+orientation = "landscape"
+resizeable_activity = false
+
+# This is for quick testing, used for debug builds
+[package.metadata.android.signing.release]
+path = "C:\\Users\\Joshua\\.android\\debug.keystore"
+keystore_password = "android"
+
+[[package.metadata.android.uses_feature]]
+name = "android.hardware.vulkan.level"
+required = true
+version = 1

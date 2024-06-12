@@ -186,7 +186,7 @@ fn staff_update(mut gizmos: Gizmos, train: ResMut<TrainSequence>) {
     if next_key < train.notes.len() {
         let x = index_to_x(next_key, note_space);
         let y = pitch_to_y(train.notes[next_key].pitch);
-        gizmos.rect_2d(Vec2::new(x, y), 0., Vec2::splat(34.), Color::BLUE);
+        gizmos.rect_2d(Vec2::new(x, y), 0., Vec2::splat(34.), Color::srgb(0., 0., 1.));
     }
 }
 
@@ -232,9 +232,9 @@ fn staff_update_labels(
             let expected_key = pitch_to_char(note.pitch);
             text.sections[0].value = expected_key.to_string();
             let col = if expected_key == note.pressed_key {
-                Color::GREEN
+                Color::srgb(0., 1., 0.)
             } else {
-                Color::RED
+                Color::srgb(1., 0., 0.)
             };
             text.sections[0].style.color = col;
 
@@ -293,7 +293,7 @@ fn staff_setup(
                             TextStyle {
                                 font: asset_server.load("fonts/FiraSans-Bold.ttf"),
                                 font_size: 30.0,
-                                color: Color::rgb(0.9, 0.9, 0.9),
+                                color: Color::srgb(0.9, 0.9, 0.9),
                             },
                         )],
                         ..default()
@@ -306,14 +306,14 @@ fn staff_setup(
     }
 }
 
-const NORMAL_BUTTON: Color = Color::rgb(0.15, 0.15, 0.15);
-const HOVERED_BUTTON: Color = Color::rgb(0.25, 0.25, 0.25);
-const PRESSED_BUTTON: Color = Color::rgb(0.35, 0.75, 0.35);
+const NORMAL_BUTTON: Color = Color::srgb(0.15, 0.15, 0.15);
+const HOVERED_BUTTON: Color = Color::srgb(0.25, 0.25, 0.25);
+const PRESSED_BUTTON: Color = Color::srgb(0.35, 0.75, 0.35);
 
-type ButtonQuery<'world, 'state, 'a, 'b, 'c> = Query<
+type ButtonQuery<'world, 'state, 'a, 'b, 'c, 'd> = Query<
     'world,
     'state,
-    (&'a Interaction, &'b mut BackgroundColor, &'c Children),
+    (&'a Interaction, &'b mut UiImage, &'c mut BorderColor, &'d Children),
     (Changed<Interaction>, With<Button>),
 >;
 
@@ -322,11 +322,12 @@ fn game_button_system(
     text_query: Query<&mut Text>,
     mut train: ResMut<TrainSequence>,
 ) {
-    for (interaction, mut color, children) in &mut interaction_query {
+    for (interaction, mut image, mut border_color, children) in &mut interaction_query {
         let text = text_query.get(children[0]).unwrap();
         match *interaction {
             Interaction::Pressed => {
-                *color = PRESSED_BUTTON.into();
+                image.color = PRESSED_BUTTON;
+                border_color.0 = Color::WHITE;
                 let t = &text.sections[0].value;
                 if t.len() == 1 {
                     let key_char = t.chars().next().unwrap();
@@ -347,10 +348,12 @@ fn game_button_system(
                 }
             }
             Interaction::Hovered => {
-                *color = HOVERED_BUTTON.into();
+                image.color = HOVERED_BUTTON;
+                border_color.0 = Color::BLACK;
             }
             Interaction::None => {
-                *color = NORMAL_BUTTON.into();
+                image.color = NORMAL_BUTTON;
+                border_color.0 = Color::BLACK;
             }
         }
     }
@@ -398,7 +401,8 @@ fn game_button_setup(mut commands: Commands, asset_server: Res<AssetServer>) {
                                 ..default()
                             },
                             border_color: BorderColor(Color::BLACK),
-                            background_color: NORMAL_BUTTON.into(),
+                            border_radius: BorderRadius::all(Val::Px(4.)),
+                            image: UiImage::default().with_color(NORMAL_BUTTON),
                             ..default()
                         })
                         .with_children(|parent| {
@@ -407,7 +411,7 @@ fn game_button_setup(mut commands: Commands, asset_server: Res<AssetServer>) {
                                 TextStyle {
                                     font: asset_server.load("fonts/FiraSans-Bold.ttf"),
                                     font_size: 20.0,
-                                    color: Color::rgb(0.9, 0.9, 0.9),
+                                    color: Color::srgb(0.9, 0.9, 0.9),
                                 },
                             ));
                             if let TrainCourse::All = var {
@@ -417,7 +421,7 @@ fn game_button_setup(mut commands: Commands, asset_server: Res<AssetServer>) {
                                         "Resolution",
                                         TextStyle {
                                             font_size: 10.0,
-                                            color: Color::rgb(0.5, 0.5, 0.9),
+                                            color: Color::srgb(0.5, 0.5, 0.9),
                                             ..default()
                                         },
                                     ),
@@ -455,7 +459,8 @@ fn game_button_setup(mut commands: Commands, asset_server: Res<AssetServer>) {
                                 ..default()
                             },
                             border_color: BorderColor(Color::BLACK),
-                            background_color: NORMAL_BUTTON.into(),
+                            border_radius: BorderRadius::all(Val::Px(4.)),
+                            image: UiImage::default().with_color(NORMAL_BUTTON),
                             ..default()
                         })
                         .with_children(|parent| {
@@ -464,7 +469,7 @@ fn game_button_setup(mut commands: Commands, asset_server: Res<AssetServer>) {
                                 TextStyle {
                                     font: asset_server.load("fonts/FiraSans-Bold.ttf"),
                                     font_size: 40.0,
-                                    color: Color::rgb(0.9, 0.9, 0.9),
+                                    color: Color::srgb(0.9, 0.9, 0.9),
                                 },
                             ));
                         });
@@ -478,9 +483,13 @@ fn game_button_setup(mut commands: Commands, asset_server: Res<AssetServer>) {
 fn on_resize_system(
     mut q: Query<&mut Text, With<ResolutionText>>,
     mut resize_reader: EventReader<WindowResized>,
+    // mut windows: Query<&mut Window>,
 ) {
     let mut text = q.single_mut();
-    for e in resize_reader.iter() {
+    for e in resize_reader.read() {
+        // let mut window = windows.single_mut();
+        // window.resolution.set(1200., 540.);
+
         // When resolution is being changed
         text.sections[0].value = format!("{:.1} x {:.1}", e.width, e.height);
     }
