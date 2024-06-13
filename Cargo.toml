@@ -52,6 +52,7 @@ apk_name = "staff_trainer"
 strip = "strip"
 # see https://github.com/rust-mobile/cargo-apk
 assets = "assets"
+resources = "android/res"
 build_targets = ["aarch64-linux-android"]
 
 [package.metadata.android.sdk]
@@ -60,13 +61,15 @@ target_sdk_version = 30
 [package.metadata.android.application]
 label = "Staff Trainer"
 debuggable = true
-# icon = "@icons/android-launchericon"
+icon = "@mipmap/ic_launcher"
 
 [package.metadata.android.application.activity]
 label = "Staff Trainer"
 launch_mode = "singleTop"
 orientation = "landscape"
 resizeable_activity = false
+theme = "@style/Theme.AppCompat.NoActionBar"
+immersive = true
 
 # This is for quick testing, used for debug builds
 [package.metadata.android.signing.release]
